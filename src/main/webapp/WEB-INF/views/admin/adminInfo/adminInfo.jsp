@@ -13,6 +13,7 @@
     <script>
         let msg = "${param.msg}";
         if (msg == "MOD_OK") alert("성공적으로 수정되었습니다.");
+        if (msg == "MOD_ERR") alert("수정이 실패하였습니다.");
         if (msg == "READ_ERR") alert("정보를 가져오는데 실패했습니다. 다시 시도해 주세요.");
     </script>
 
@@ -29,9 +30,9 @@
         <div id="infoDetailBox">
             <h2 id="infoTitle" style="margin-bottom: 50px">개인 정보 수정</h2>
             <label style="margin-right: 40px;">아이디</label>
-            <input type="text" class="infoInputBox" readonly value="${adminDto.id}"><br>
+            <input type="text" class="infoInputBox" readonly value="${adminDto.id}" name="id" id="id"><br>
             <label style="margin-right: 55px;">이름</label>
-            <input type="text" class="infoInputBox" readonly value="${adminDto.name}"><br>
+            <input type="text" class="infoInputBox" readonly value="${adminDto.name}" name="name" id="name"><br>
             <label style="margin-right: 40px;">닉네임</label>
             <input type="text" name="nickname" class="infoModifyInputBox" id="nickname"
                    value="${adminDto.nickname}"><br>
@@ -140,10 +141,14 @@
                 form.setAttribute('action', '/admin/modify');
                 form.setAttribute('id', 'form');
 
+                var id = document.getElementById('id');
+                var name = document.getElementById('name');
                 var nickname = document.getElementById('nickname');
                 var phone = document.getElementById('phone');
                 var birth = document.getElementById('birth');
                 var pwd = document.getElementById('pwd2');
+                form.appendChild(id);
+                form.appendChild(name);
                 form.appendChild(nickname);
                 form.appendChild(phone);
                 form.appendChild(birth);
@@ -160,7 +165,7 @@
         })
 
 
-    })
+    }) //document
 </script>
 
 </body>

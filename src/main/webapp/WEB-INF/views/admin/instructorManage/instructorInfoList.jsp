@@ -21,13 +21,6 @@
           integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
 </head>
-<script>
-    let msg = "${param.msg}";
-    if (msg == "MOD_OK") alert("성공적으로 수정되었습니다.");
-    if (msg == "READ_ERR") alert("정보를 가져올 수 없습니다. 다시 시도해주세요.");
-    if (msg == "MOD_ERR") alert("수정에 실패했습니다. 다시 시도해 주세요.");
-
-</script>
 <body>
 <header>
     <jsp:include page="../header.jsp"/>
@@ -64,7 +57,7 @@
                         <option value="3">휴직</option>
                         <option value="4">퇴직</option>
                     </select>
-                    <input type="button" value="수정" class="modifyBtn" onclick="statusUpdate()" style="height: 40px">
+                    <input type="button" value="수정" class="modifyBtn" style="height: 40px">
                 </div>
             </div>
 
@@ -101,7 +94,7 @@
                                     pattern="yyyy-MM-dd"
                                     type="date"/></td>
                             <td>
-                                <button class="detailBtn" onclick="location.href='/adminManage/instructor/read?page=${sc.page}&mebrNo=${instructorDto.mebrNo}'">
+                                <button class="detailBtn" onclick="location.href='/adminManage/instructor/${instructorDto.mebrNo}/info?page=${sc.page}'">
                                     상세보기
                                 </button>
                             </td>
@@ -137,7 +130,57 @@
 <script>
 
     $(document).ready(function (){
-    })
+
+
+        $(".modifyBtn").on("click", function () {
+
+            const query = 'input[name="chk"]:checked'
+            const selectedElements = document.querySelectorAll(query)
+
+            //체크박스 체크된 항목의 개수
+            const selectedElementsCnt = selectedElements.length;
+
+            if (selectedElementsCnt == 0) {
+                alert("수정할 항목을 선택해주세요.");
+                return false;
+            } else {
+                if (confirm("상태를 변경 하시겠습니까?")) {
+                    //배열생성
+                    const mebrNoArr = new Array(selectedElementsCnt);
+                    //변수 사용하기
+                    document.querySelectorAll('input[name="chk"]:checked').forEach(function (v, i) { //i는 인덱스, v는 input체크박스
+                        mebrNoArr[i] = v.value; //배열에 현재 체크한 mebrNo가 담김
+                    });
+
+                    var status = document.getElementById('status').value;
+
+                    $.ajax({
+
+                        type : 'PATCH',
+                        url : '/adminManage/instructor/list?page=${sc.page}',
+                        headers: {"content-type": "application/json"},
+                        traditional: true,
+                        data : JSON.stringify({status : status,mebrNoArr:mebrNoArr}),
+                        success : function (result){
+                            if(result.redirect){
+                                alert("수정이 완료되었습니다.");
+                                window.location.href = result.redirect;
+                            }else{
+                                throw new Error("Status Modify Error")
+                            }
+                        },
+                        error : function(){
+                            alert("수정이 실패했습니다.");
+
+                        }
+                    });//ajax
+                }
+            }
+
+        })
+
+
+        })
 
     function allChecked(target) {
 
@@ -193,45 +236,5 @@
         });
     }
 
-    // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-
-
-    function statusUpdate() {
-        //체크박스 체크된 항목
-        const query = 'input[name="chk"]:checked'
-        const selectedElements = document.querySelectorAll(query)
-
-        //체크박스 체크된 항목의 개수
-        const selectedElementsCnt = selectedElements.length;
-
-        if (selectedElementsCnt == 0) {
-            alert("수정할 항목을 선택해주세요.");
-            return false;
-        } else {
-            if (confirm("상태를 변경 하시겠습니까?")) {
-                //배열생성
-                const arr = new Array(selectedElementsCnt);
-
-                document.querySelectorAll('input[name="chk"]:checked').forEach(function (v, i) { //i는 인덱스, v는 input체크박스
-                    arr[i] = v.value;
-                });
-
-                const form = document.createElement('form');
-                form.setAttribute('method', 'post');        //Post 메소드 적용
-                form.setAttribute('action', '/adminManage/instructor/modifyStatus?page=${sc.page}');
-
-                var input1 = document.createElement('input');
-                var input2 = document.getElementById('status');
-                input1.setAttribute("type", "hidden");
-                input1.setAttribute("name", "mebrNoArr");
-                input1.setAttribute("value", arr);
-                form.appendChild(input1);
-                form.appendChild(input2);
-                console.log(form);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-    }
 </script>
 </html>

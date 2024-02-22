@@ -12,8 +12,10 @@ public class StdManageDto { //학생
         private Date modifyDate;
         private String lastIdNo;
         private String etc;
+        private Integer[] mebrNoArr; //일괄 수정,삭세 시 사용
 
-        public StdManageDto(){}
+
+    public StdManageDto(){}
 
         public StdManageDto(Integer mebrNo,String gisu, Integer status) {
             this.mebrNo = mebrNo;
@@ -21,7 +23,15 @@ public class StdManageDto { //학생
             this.status = status;
         }
 
-        public Integer getMebrNo() {
+    public Integer[] getMebrNoArr() {
+        return mebrNoArr;
+    }
+
+    public void setMebrNoArr(Integer[] mebrNoArr) {
+        this.mebrNoArr = mebrNoArr;
+    }
+
+    public Integer getMebrNo() {
             return mebrNo;
         }
 

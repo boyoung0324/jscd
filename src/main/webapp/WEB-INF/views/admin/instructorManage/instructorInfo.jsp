@@ -37,7 +37,7 @@
         <div id="infoDetailBox">
 
             <h2 id="infoTitle">강사 상세보기</h2>
-
+            <input type="hidden" name="mebrNo" id="mebrNo" value="${infoDto.mebrNo}">
             <label style="margin-right: 3px;">강사번호</label>
             <input type="text" class="infoInputBox" readonly value="${infoDto.iscrNo}"><br>
             <label style="margin-right: 15px;">아이디</label>
@@ -61,7 +61,6 @@
                    value="<fmt:formatDate value="${infoDto.regDate}" pattern="yyyy-MM-dd" type="date"/>"><br>
             <label style="margin-right: 25px;">비고</label>
             <input type="text" class="infoModifyInputBox" name="etc" id="etc" readonly value="${infoDto.etc}"><br>
-            <input type="hidden" name="mebrNo" id="mebrNo" value="${infoDto.mebrNo}">
             <div id="adminBtnBox">
                 <input type="submit" value="수정" class="modifyBtn">
                 <input type="button" value="목록" class="backBtn"
@@ -109,36 +108,45 @@
 
                 statusInput.replaceWith($statusSelect);
 
-
                 $("input[name=hourPmt]").attr('readonly', false);
                 $("input[name=etc]").attr('readonly', false);
-                // $("input[name=status]").css("border-bottom", "1px solid red");
                 $("input[name=hourPmt]").css("border-bottom", "1px solid red");
                 $("input[name=etc]").css("border-bottom", "1px solid red");
             } else {
-                const form = document.createElement('form');
-                form.setAttribute('method', 'post');
-                form.setAttribute('action', '/adminManage/instructor/modify?page=${page}&mebrNo=${infoDto.mebrNo}');
 
-                var status = document.getElementById('status');
-                var hourPmt = document.getElementById('hourPmt');
-                var etc = document.getElementById('etc');
-                var mebrNo = document.getElementById('mebrNo');
+                var mebrNo = document.getElementById('mebrNo').value;
+                var status = document.getElementById('status').value;
+                var hourPmt = document.getElementById('hourPmt').value;
+                var etc = document.getElementById('etc').value;
 
-                form.appendChild(status);
-                form.appendChild(hourPmt);
-                form.appendChild(etc);
-                form.appendChild(mebrNo);
-                console.log(form)
-                document.body.appendChild(form);
-                $('#infoDetailBox').css('display','none');
 
-                form.submit();
+                $.ajax({
+                    type : 'PATCH',
+                    url : '/adminManage/instructor/'+mebrNo+'/info?page=${page}',
+                    headers: {"content-type": "application/json"},
+                    data : JSON.stringify({mebrNo:mebrNo,status:status,hourPmt:hourPmt,etc:etc}),
+                    success : function (result){
+                        if(result.redirect){
+                            alert("수정이 완료되었습니다.");
+                            window.location.href = result.redirect;
+                        }else{
+                            throw new Error("Modify Error")
+                        }
+                    },
+                    error : function (){
+                        alert("수정이 실패했습니다.");
+
+                    }
+
+                });//ajax
+
             }
 
 
         })
     })
+
+
 
 </script>
 </html>

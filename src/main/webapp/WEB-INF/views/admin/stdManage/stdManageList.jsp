@@ -17,16 +17,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
           integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://code.jquery.com/jquery-1.11.3.js"></script>
 </head>
 <script>
     let msg = "${param.msg}";
     if (msg == "LIST_ERR") alert("학생 목록을 가져오는데 실패했습니다. 다시 시도해 주세요.");
-    if (msg == "MOD_ERR") alert("수정에 실패했습니다. 다시 시도해 주세요.");
-    if (msg == "DEL_OK") alert("삭제 되었습니다.");
-    if (msg == "DEL_ERR") alert("삭제가 실패했습니다. 다시 시도해 주세요.");
-    if (msg == "MOD_OK") alert("성공적으로 수정되었습니다.");
-
-
 </script>
 <body>
 <header>
@@ -63,8 +58,8 @@
                         <option value="2">수강중</option>
                         <option value="3">수료</option>
                     </select>
-                    <input type="button" value="수정" class="modifyBtn" onclick="statusUpdate()">
-                    <input type="button" value="삭제" class="deleteBtn" onclick="stdDelete()">
+                    <input type="button" value="수정" class="modifyBtn">
+                    <input type="button" value="삭제" class="deleteBtn">
                 </div>
             </div>
 
@@ -76,7 +71,6 @@
                         <th style="width: 250px;">아이디</th>
                         <th style="width: 100px;">이름</th>
                         <th style="width:250px;">휴대전화</th>
-<%--                        <th style="width: 100px;">기수</th>--%>
                         <th style="width:100px;">상태</th>
                         <th style="width:250px;">가입일</th>
                         <th style="width:100px;"></th>
@@ -92,14 +86,13 @@
                             <td>${stdDto.id}</td>
                             <td>${stdDto.name}</td>
                             <td>${stdDto.phone}</td>
-<%--                            <td>${stdDto.gisu}</td>--%>
                             <td>${stdDto.status}</td>
                             <td><fmt:formatDate value="${stdDto.regDate}"
                                                 pattern="yyyy-MM-dd"
                                                 type="date"/></td>
                             <td>
                                 <button class="detailBtn"
-                                        onclick="location.href='/adminManage/stdManage/read?page=${sc.page}&mebrNo=${stdDto.mebrNo}'">
+                                        onclick="location.href='/adminManage/stdManage/${stdDto.mebrNo}/info?page=${sc.page}'">
                                     상세보기
                                 </button>
                             </td>
@@ -135,7 +128,109 @@
 </body>
 
 <script>
-    function allChecked(target) {
+
+    $(document).ready(function (){
+
+        $(".deleteBtn").on("click", function () {
+
+            //체크박스 체크된 항목
+            const query = 'input[name="chk"]:checked'
+            const selectedElements = document.querySelectorAll(query)
+
+            //체크박스 체크된 항목의 개수
+            const selectedElementsCnt = selectedElements.length;
+
+            if (selectedElementsCnt == 0) {
+                alert("삭제할 항목을 선택해주세요.");
+                return false;
+            } else {
+                if (confirm("삭제 하시겠습니까?")) {
+                    //배열생성
+                    const mebrNoArr = new Array(selectedElementsCnt);
+
+                    document.querySelectorAll('input[name="chk"]:checked').forEach(function (v, i) { //i는 인덱스, v는 input체크박스
+                        mebrNoArr[i] = v.value;
+                        console.log(v.value);
+                    });
+
+                    $.ajax({
+                        type : 'DELETE',
+                        url : '/adminManage/stdManage/list?page=${sc.page}',
+                        headers: {"content-type": "application/json"},
+                        data : JSON.stringify({mebrNoArr:mebrNoArr}),
+                        success : function (result){
+                            if(result.redirect){
+                                alert("삭제 되었습니다.");
+                                window.location.href = result.redirect;
+                            }else{
+                                throw new Error("Delete Error")
+                            }
+                        },
+                        error : function (){
+                            alert("삭제 실패했습니다.");
+
+                        }
+
+                    });//ajax
+                }
+            }
+
+        })//삭제
+
+        $(".modifyBtn").on("click", function () {
+            //체크박스 체크된 항목
+            const query = 'input[name="chk"]:checked'
+            const selectedElements = document.querySelectorAll(query)
+
+            //체크박스 체크된 항목의 개수
+            const selectedElementsCnt = selectedElements.length;
+
+            if (selectedElementsCnt == 0) {
+                alert("수정할 항목을 선택해주세요.");
+                return false;
+            } else {
+                if (confirm("상태를 변경 하시겠습니까?")) {
+                    //배열생성
+                    const mebrNoArr = new Array(selectedElementsCnt);
+
+                    document.querySelectorAll('input[name="chk"]:checked').forEach(function (v, i) { //i는 인덱스, v는 input체크박스
+                        mebrNoArr[i] = v.value;
+                    });
+
+                    var status = document.getElementById('status').value;
+
+                    $.ajax({
+
+                        type : 'PATCH',
+                        url : '/adminManage/stdManage/list?page=${sc.page}',
+                        headers: {"content-type": "application/json"},
+                        traditional: true,
+                        data : JSON.stringify({status : status,mebrNoArr:mebrNoArr}),
+                        success : function (result){
+                            if(result.redirect){
+                                alert("수정이 완료되었습니다.");
+                                window.location.href = result.redirect;
+                            }else{
+                                throw new Error("Status Modify Error")
+                            }
+                        },
+                        error : function(){
+                            alert("수정이 실패했습니다.");
+
+                        }
+                    });//ajax
+
+
+
+                }
+            }
+        })//수정
+        })//document
+
+
+
+
+        function allChecked(target) {
 
         //전체 체크박스 버튼
         const checkbox = document.getElementById('allCheckBox');
@@ -187,85 +282,6 @@
         document.querySelectorAll(".chk").forEach(function (v, i) {
             v.checked = false;
         });
-    }
-
-    // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-
-    //글수정
-    function statusUpdate() {
-        //체크박스 체크된 항목
-        const query = 'input[name="chk"]:checked'
-        const selectedElements = document.querySelectorAll(query)
-
-        //체크박스 체크된 항목의 개수
-        const selectedElementsCnt = selectedElements.length;
-
-        if (selectedElementsCnt == 0) {
-            alert("수정할 항목을 선택해주세요.");
-            return false;
-        } else {
-            if (confirm("상태를 변경 하시겠습니까?")) {
-                //배열생성
-                const arr = new Array(selectedElementsCnt);
-
-                document.querySelectorAll('input[name="chk"]:checked').forEach(function (v, i) { //i는 인덱스, v는 input체크박스
-                    arr[i] = v.value;
-                });
-
-                const form = document.createElement('form');
-                form.setAttribute('method', 'post');        //Post 메소드 적용
-                form.setAttribute('action', '/adminManage/stdManage/modifyStatus?page=' +${sc.page});
-
-                var input1 = document.createElement('input');
-                var input2 = document.getElementById('status');
-                input1.setAttribute("type", "hidden");
-                input1.setAttribute("name", "mebrNoArr");
-                input1.setAttribute("value", arr);
-                form.appendChild(input1);
-                form.appendChild(input2);
-                console.log(form);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-    }
-
-    //글삭제
-    function stdDelete() {
-        //체크박스 체크된 항목
-        const query = 'input[name="chk"]:checked'
-        const selectedElements = document.querySelectorAll(query)
-
-        //체크박스 체크된 항목의 개수
-        const selectedElementsCnt = selectedElements.length;
-
-        if (selectedElementsCnt == 0) {
-            alert("삭제할 항목을 선택해주세요.");
-            return false;
-        } else {
-            if (confirm("삭제 하시겠습니까?")) {
-                //배열생성
-                const arr = new Array(selectedElementsCnt);
-
-                document.querySelectorAll('input[name="chk"]:checked').forEach(function (v, i) { //i는 인덱스, v는 input체크박스
-                    arr[i] = v.value;
-                    console.log(v.value);
-                });
-
-
-                const form = document.createElement('form');
-                form.setAttribute('method', 'post');        //Post 메소드 적용
-                form.setAttribute('action', '/adminManage/stdManage/deleteMain?page=${sc.page}');
-
-                var input1 = document.createElement('input');
-                input1.setAttribute("type", "hidden");
-                input1.setAttribute("name", "mebrNoArr");
-                input1.setAttribute("value", arr);
-                form.appendChild(input1);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
     }
 </script>
 </html>

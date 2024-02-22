@@ -126,28 +126,35 @@
 
 
             } else {
-                const form = document.createElement('form');
-                form.setAttribute('method', 'post');
-                form.setAttribute('action', '/adminManage/memberManage/modify?page=${page}&mebrNo=${memberDto.mebrNo}');
+                // const form = document.createElement('form');
+                // form.setAttribute('method', 'post');
+                <%--form.setAttribute('action', '/adminManage/memberManage/modify?page=${page}&mebrNo=${memberDto.mebrNo}');--%>
 
-                var status = document.getElementById('status');
-                var grade = document.getElementById('grade');
-                var etc = document.getElementById('etc');
-                var mebrNo = document.getElementById('mebrNo');
-                var originGrade = document.getElementById('originGrade');
+                var status = document.getElementById('status').value;
+                var grade = document.getElementById('grade').value;
+                var etc = document.getElementById('etc').value;
+                var mebrNo = document.getElementById('mebrNo').value;
+                var originGrade = document.getElementById('originGrade').value;
 
-                form.appendChild(grade);
-                form.appendChild(status);
-                form.appendChild(etc);
-                form.appendChild(mebrNo);
-                form.appendChild(originGrade);
+                $.ajax({
 
-                console.log(form)
-                document.body.appendChild(form);
-                $('#infoDetailBox').css('display','none');
-
-                form.submit();
-            }
+                    type : 'PATCH',
+                    url : '/adminManage/memberManage/'+mebrNo+'/info?page=${sc.page}',
+                    headers: {"content-type": "application/json"},
+                    data : JSON.stringify({status:status,grade:grade,etc:etc,mebrNo:mebrNo,originGrade:originGrade}),
+                    success : function(result){
+                        if(result.redirect){
+                            alert("수정이 완료되었습니다.");
+                            window.location.href = result.redirect;
+                        }else{
+                            throw new Error("Modify Error")
+                        }
+                    },
+                    error : function(){
+                        alert("수정이 실패했습니다.");
+                    }
+                })//ajax
+            }//else
 
 
         })//수정

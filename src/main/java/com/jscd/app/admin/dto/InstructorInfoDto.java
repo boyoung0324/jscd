@@ -7,9 +7,9 @@ public class InstructorInfoDto { //강사정보
 
         private Integer iscrNo; //pk_강사 고유 코드
         private Integer mebrNo; //회원 고유 번호
+        private Integer[] mebrNoArr; //일괄 수정,삭세 시 사용
         private String intro;
         private Integer status;
-
         private Float hourPmt;
         private Date regDate;
         private String firstIdNo;
@@ -19,7 +19,21 @@ public class InstructorInfoDto { //강사정보
 
         public InstructorInfoDto(){}
 
-        public InstructorInfoDto(Integer iscrNo, Integer mebrNo, String intro, Integer status, Float hourPmt, Date regDate, String firstIdNo, Date modifyDate, String lastIdNo, String etc) {
+    public InstructorInfoDto(Integer iscrNo, Integer mebrNo, Integer[] mebrNoArr, String intro, Integer status, Float hourPmt, Date regDate, String firstIdNo, Date modifyDate, String lastIdNo, String etc) {
+        this.iscrNo = iscrNo;
+        this.mebrNo = mebrNo;
+        this.mebrNoArr = mebrNoArr;
+        this.intro = intro;
+        this.status = status;
+        this.hourPmt = hourPmt;
+        this.regDate = regDate;
+        this.firstIdNo = firstIdNo;
+        this.modifyDate = modifyDate;
+        this.lastIdNo = lastIdNo;
+        this.etc = etc;
+    }
+
+    public InstructorInfoDto(Integer iscrNo, Integer mebrNo, String intro, Integer status, Float hourPmt, Date regDate, String firstIdNo, Date modifyDate, String lastIdNo, String etc) {
             this.iscrNo = iscrNo;
             this.mebrNo = mebrNo;
             this.intro = intro;
@@ -40,9 +54,15 @@ public class InstructorInfoDto { //강사정보
         this.hourPmt = hourPmt;
     }
 
+    public Integer[] getMebrNoArr() {
+        return mebrNoArr;
+    }
 
+    public void setMebrNoArr(Integer[] mebrNoArr) {
+        this.mebrNoArr = mebrNoArr;
+    }
 
-        public Integer getIscrNo() {
+    public Integer getIscrNo() {
             return iscrNo;
         }
 

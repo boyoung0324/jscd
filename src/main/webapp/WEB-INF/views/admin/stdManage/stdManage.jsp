@@ -46,10 +46,6 @@
             <input type="text" class="infoInputBox" readonly value="${stdDto.name}"><br>
             <label>생년월일</label>
             <input type="text" class="infoInputBox" readonly value="${stdDto.birth}"><br>
-            <%--    <input type="text" class="infoInputBox" readonly--%>
-            <%--           value="<fmt:formatDate value="${stdDto.birth}" pattern="yyyy-MM-dd" type="date"/>"><br>--%>
-
-
             <label>휴대전화</label>
             <input type="text" class="infoInputBox" readonly value="${stdDto.phone}"><br>
             <label style="margin-right: 25px;">기수</label>
@@ -94,15 +90,33 @@
     $(document).ready(function () {
 
         $(".deleteBtn").on("click", function () {
+
+            var mebrNo = document.getElementById('mebrNo').value;
+
             if (!confirm("정말로 삭제하시겠습니까?")) return;
 
-            const form = document.createElement('form');
-            form.setAttribute('method', 'post');
-            form.setAttribute('action', '/adminManage/stdManage/delete?mebrNo=${stdDto.mebrNo}&page=${page}');
-            document.body.appendChild(form);
-            form.submit();
 
-        });
+            $.ajax({
+                type : 'DELETE',
+                url : '/adminManage/stdManage/'+mebrNo+'/info?page=${page}',
+                headers: {"content-type": "application/json"},
+                data : JSON.stringify({mebrNo:mebrNo}),
+                success : function (result){
+                    if(result.redirect){
+                        alert("삭제 되었습니다.");
+                        window.location.href = result.redirect;
+                    }else{
+                        throw new Error("Delete Error")
+                    }
+                },
+                error : function (){
+                    alert("삭제 실패했습니다.");
+
+                }
+
+            });//ajax
+            })
+
 
         $(".modifyBtn").on("click", function () {
 
@@ -132,26 +146,31 @@
 
 
             } else {
-                const form = document.createElement('form');
-                form.setAttribute('method', 'post');
-                form.setAttribute('action', '/adminManage/stdManage/modify?page=${page}&mebrNo=${stdDto.mebrNo}');
 
-                var gisu = document.getElementById('gisu');
-                var status = document.getElementById('status');
-                var etc = document.getElementById('etc');
-                var mebrNo = document.getElementById('mebrNo');
+                var mebrNo = document.getElementById('mebrNo').value;
+                var gisu = document.getElementById('gisu').value;
+                var status = document.getElementById('status').value;
+                var etc = document.getElementById('etc').value;
 
-                form.appendChild(gisu);
-                form.appendChild(status);
-                form.appendChild(etc);
-                form.appendChild(mebrNo);
-                console.log(form)
-                document.body.appendChild(form);
-                $('#infoDetailBox').css('display','none');
-                form.submit();
-            }
+                $.ajax({
 
-
+                    type : 'PATCH',
+                    url : '/adminManage/stdManage/'+mebrNo+'/info?page=${page}',
+                    headers: {"content-type": "application/json"},
+                    data : JSON.stringify({mebrNo:mebrNo,gisu:gisu,status:status,etc:etc}),
+                    success : function(result){
+                        if(result.redirect){
+                            alert("수정이 완료되었습니다.");
+                            window.location.href = result.redirect;
+                        }else{
+                            throw new Error("Modify Error")
+                        }
+                    },
+                    error : function(){
+                        alert("수정이 실패했습니다.");
+                    }
+                })//ajax
+            }//else
         })//수정
 
 

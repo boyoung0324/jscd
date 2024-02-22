@@ -26,14 +26,10 @@ public class MemberDto {
 	private String ageChkYN;
 	private String marketingChkYN;
 	private String toURL;
+	private String originGrade; //관리자 - 기존 등급 확인할 때 사용
+	private Integer[] mebrNoArr; //일괄 수정,삭세 시 사용
 
-	public String getToURL() {
-		return toURL;
-	}
 
-	public void setToURL(String toURL) {
-		this.toURL = toURL;
-	}
 
 	public MemberDto() {
 
@@ -64,6 +60,29 @@ public class MemberDto {
 		this.marketingChkYN = marketingChkYN;
 	}
 
+	public Integer[] getMebrNoArr() {
+		return mebrNoArr;
+	}
+
+	public void setMebrNoArr(Integer[] mebrNoArr) {
+		this.mebrNoArr = mebrNoArr;
+	}
+
+	public String getOriginGrade() {
+		return originGrade;
+	}
+
+	public void setOriginGrade(String originGrade) {
+		this.originGrade = originGrade;
+	}
+
+	public String getToURL() {
+		return toURL;
+	}
+
+	public void setToURL(String toURL) {
+		this.toURL = toURL;
+	}
 	public int getMebrNo() {
 		return mebrNo;
 	}

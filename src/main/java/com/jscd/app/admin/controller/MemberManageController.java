@@ -9,12 +9,9 @@ import com.jscd.app.member.dto.MemberDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 	/*
 	작성일:20231123
@@ -56,12 +53,11 @@ public class MemberManageController {
     }
 
 
-    @GetMapping("/read") //회원 상세보기 페이지
-    public String infoRead(Integer mebrNo, Integer page, Model model) {
+    @GetMapping("/{mebrNo}/info") //회원 상세보기 페이지
+    public String infoRead(@PathVariable Integer mebrNo, Integer page, Model model) {
 
         try { //전달 받은 회원번호로 회원 select
             MemberManageDto memberDto = manageService.read(mebrNo);
-            System.out.println("회원 상세보기 memberDto = " + memberDto);
             //jsp에 전달
             model.addAttribute("memberDto", memberDto);
             model.addAttribute("page", page);
@@ -76,49 +72,55 @@ public class MemberManageController {
     }
 
 
-    @PostMapping("/modify") //상세 페이지 수정
-    public String infoModify(Integer page, MemberDto memberDto, Model model,String originGrade) {
-
-
+    //상세 페이지 수정
+    @PatchMapping("/{mebrNo}/info")
+    @ResponseBody
+    public Map<String,String> modifyInfo(@PathVariable Integer mebrNo, Integer page, @RequestBody MemberDto memberDto) {
+            Map<String,String> map = new HashMap<>();
         try {
             //입력 받은 dto를 update
-            manageService.modifyDetail(memberDto);
-            MemberDto adminDel = manageService.readMember(memberDto.getMebrNo());
-            if(originGrade.equals("관리자")){//기존 등급이 관리자라면, 관리자 테이블에서 삭제
-                adminService.removeAdmin(adminDel.getId());
+            int result = manageService.modifyDetail(memberDto);
+            if(memberDto.getOriginGrade().equals("관리자")){ //서비스로 뺄지 고민
+                //기존 등급이 관리자라면, 관리자 테이블에서 삭제
+                adminService.removeAdmin(memberDto.getId());
             }
-            //성공 msg 모델에 전달
-            model.addAttribute("msg", "MOD_OK");
+            if(result != 1) throw new Exception("Modify Error");
+            map.put("redirect","/adminManage/memberManage/" + mebrNo + "/info?page=" + page);
+            return map;
         } catch (Exception e) {
             e.printStackTrace();
-            //에러 발생 시, 에러 msg 전달, 읽기 화면으로 이동
-            model.addAttribute("msg", "MOD_ERR");
-            return "redirect:/adminManage/memberManage/read?page=" + page + "&mebrNo=" + memberDto.getMebrNo();
+            map.put("error","Modify Error");
+            return map;
         }
 
-        return "redirect:/adminManage/memberManage/read?page="+page+"&mebrNo="+memberDto.getMebrNo();
     }
 
-    @PostMapping("/modifyMain") //메인 페이지 등급/상태 일괄 수정
-    public String statusModify(Integer[] mebrNoArr, Integer status, Integer grade, Integer page, Model model) {
+
+    @PatchMapping("/list") //메인 페이지 등급/상태 일괄 수정
+    @ResponseBody
+    public Map<String,String> mainModify(@RequestBody MemberDto memberDto, Integer page) {
+        Map<String, String> map = new HashMap<>();
+        Integer[]mebrNoArr = memberDto.getMebrNoArr();
+        System.out.println("배열 = " + Arrays.toString(mebrNoArr));
+
         try {
             //전달받은 회원 번호 배열을 list에 담기
-            List mebrNo = new ArrayList(mebrNoArr.length);
+            List mebrNo = new ArrayList<>(mebrNoArr.length);
             for (int i = 0; i < mebrNoArr.length; i++) {
                 mebrNo.add(mebrNoArr[i]);
             }
             //상태,등급,회원번호 update
-            manageService.modify(status, grade, mebrNo);
-            //성공 msg 전달
-            model.addAttribute("msg", "MOD_OK");
+            int result =  manageService.modify(memberDto.getStatus(), memberDto.getGrade(), mebrNo);
+
+            if(result != mebrNo.size()) throw new Exception("Modify Error");
+
+            map.put("redirect","/adminManage/memberManage/list?page=" + page);
+            return map;
         } catch (Exception e) {
             e.printStackTrace();
-            //실패 시, 에러 msg 전달. list 목록으로 리다이렉트
-            model.addAttribute("msg", "MOD_ERR");
-            return "redirect:/adminManage/memberManage/list?page=" + page;
+            map.put("error","Status Modify Error");
+            return map;
         }
-
-        return "redirect:/adminManage/memberManage/list?page=" + page;
     }
 
 

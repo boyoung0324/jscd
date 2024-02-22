@@ -9,12 +9,12 @@ import com.jscd.app.admin.service.StdManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 	/*
 	작성일:20231123
@@ -55,8 +55,8 @@ public class StdManageController {
     }
 
 
-    @GetMapping("/read") //상세 페이지
-    public String infoRead(Integer mebrNo, Integer page, Model model) {
+    @GetMapping("/{mebrNo}/info") //상세 페이지
+    public String infoRead(@PathVariable Integer mebrNo, Integer page, Model model) {
 
         try {
             //전달받은 회원번호로 학생 조회
@@ -74,25 +74,34 @@ public class StdManageController {
     }
 
 
-    @PostMapping("/modify")
-    public String infoModify(Integer page, StdManageDto stdDto, Model model) {
 
+    //상세페이지
+    @PatchMapping("/{mebrNo}/info")
+    @ResponseBody
+    public Map<String,String> infoModify(@PathVariable Integer mebrNo,Integer page, @RequestBody StdManageDto stdDto) {
+        Map<String,String> map = new HashMap<>();
         try {
-            //입력받은 dto update
-            stdService.modify(stdDto);
+            int result = stdService.modify(stdDto);
+
+            if(result != 1) throw new Exception("Modify Error");
+
+            map.put("redirect","/adminManage/stdManage/" + mebrNo + "/info?page="+page);
+            return map;
+
             //성공 msg 전달
-            model.addAttribute("msg", "MOD_OK");
         } catch (Exception e) {
             e.printStackTrace();
-            //에러 발생 시, 읽기 화면으로 이동, 에러 msg 전달
-            model.addAttribute("msg", "MOD_ERR");
-            return "redirect:/adminManage/stdManage/read?page=" + page + "&mebrNo=" + stdDto.getMebrNo();
+            map.put("error","Modify Error");
+            return map;
         }
-        return "redirect:/adminManage/stdManage/read?page="+page+"&mebrNo="+stdDto.getMebrNo();
     }
 
-    @PostMapping("/modifyStatus") //메인 페이지 상태 일괄 수정
-    public String statusModify(Integer[] mebrNoArr, Integer page, Integer status, Model model) {
+    //메인 페이지 상태 일괄 수정
+     @PatchMapping("/list")
+     @ResponseBody
+    public Map<String,String> statusModify(@RequestBody StdManageDto stdDto, Integer page) {
+        Map<String, String> map = new HashMap<>();
+        Integer[]mebrNoArr = stdDto.getMebrNoArr();
         try {
             //전달 받은 회원 번호 배열 list에 담기
             List mebrNo = new ArrayList(mebrNoArr.length);
@@ -100,42 +109,46 @@ public class StdManageController {
                 mebrNo.add(mebrNoArr[i]);
             }
             //상태와 배열 전달
-            stdService.modifyStatus(status, mebrNo);
-            //성공 시 msg jsp에 전달
-            model.addAttribute("msg", "MOD_OK");
+            int result = stdService.modifyStatus(stdDto.getStatus(), mebrNo);
+            System.out.println("수정 수 = " + result);
+
+            if(result != mebrNo.size()) throw new Exception("Status Modify Error");
+
+            map.put("redirect","/adminManage/stdManage/list?page="+page);
+            return map;
+
         } catch (Exception e) {
             e.printStackTrace();
-            //에러 발생 시, 에러 msg 전달, list에 리다이렉트
-            model.addAttribute("msg", "MOD_ERR");
-            return "redirect:/adminManage/stdManage/list?page=" + page;
+            map.put("error","Status Modify Error");
+            return map;
         }
-
-        return "redirect:/adminManage/stdManage/list?page=" + page;
     }
 
-    @PostMapping("/delete") //상세보기 화면에서 삭제
-    public String stdDelete(Integer mebrNo, Integer page, Model model) {
-
+    @DeleteMapping("/{mebrNo}/info") //상세보기 화면에서 삭제
+    @ResponseBody
+    public Map<String,String> stdDelete(@PathVariable Integer mebrNo, Integer page, Model model) {
+        Map<String,String> map = new HashMap<>();
         try {
             //전달받은 회원번호로 학생 삭제
-            stdService.remove(mebrNo);
-            //성공 msg 전달
-            model.addAttribute("msg", "DEL_OK");
+            int result = stdService.remove(mebrNo);
+            if(result != 1) throw new Exception("DELETE ERROR");
+
+            map.put("redirect","/adminManage/stdManage/list?page=" + page);
+            return map;
+
         } catch (Exception e) {
             e.printStackTrace();
-            //에러 발생 시, 에러 msg 전달, 읽기 화면으로 리다이렉트
-            model.addAttribute("msg", "DEL_ERR");
-            return "redirect:/adminManage/stdManage/read?page=" + page + "&mebrNo=" + mebrNo;
-
+            map.put("error","Modify Error");
+            return map;
         }
-
-        return "redirect:/adminManage/stdManage/list?page=" + page;
-
     }
 
-    @PostMapping("/deleteMain") //메인화면에서 삭제
-    public String stdDeleteMain(Integer[]mebrNoArr, Integer page, Model model) {
-
+    //메인화면에서 삭제
+     @DeleteMapping("/list")
+     @ResponseBody
+    public Map<String,String> stdDeleteMain(@RequestBody StdManageDto stdDto) {
+         Map<String, String> map = new HashMap<>();
+         Integer[]mebrNoArr = stdDto.getMebrNoArr();
         try {
             //전달받은 회원번호 배열 list에 담기
             List mebrNo = new ArrayList(mebrNoArr.length);
@@ -143,19 +156,19 @@ public class StdManageController {
                 mebrNo.add(mebrNoArr[i]);
             }
             //회원 배열 전달
-            stdService.removeMain(mebrNo);
-            //성공 시, msg jsp에 전달
-            model.addAttribute("msg", "DEL_OK");
+            int result = stdService.removeMain(mebrNo);
+            System.out.println("삭제 수 = " + result);
+            System.out.println("mebrNo.size() 삭제 배열 = " + mebrNo.size());
+            if(result != 1) throw new Exception("Delete Error");
+
+            map.put("redirect","/adminManage/stdManage/list");
+            return map;
         } catch (Exception e) {
             e.printStackTrace();
-            //에러 발생 시, 에러 msg 전달, 목록 페이지로 리다이렉트
-            model.addAttribute("msg", "DEL_ERR");
-            return "redirect:/adminManage/stdManage/list?page=" + page;
+            map.put("error","Delete Error");
+            return map;
 
         }
-
-        return "redirect:/adminManage/stdManage/list";
-
     }
 
 

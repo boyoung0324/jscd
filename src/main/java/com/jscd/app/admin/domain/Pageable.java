@@ -18,8 +18,8 @@ public class Pageable {
         totalPage = totalCnt / sc.getPageSize() + (totalCnt%sc.getPageSize() == 0 ? 0 : 1); //나머지가 있으면 + 1, 아니면 0
         beginPage = (sc.getPage()-1) / NAV_SIZE * NAV_SIZE + 1;
         endPage = Math.min(beginPage + NAV_SIZE-1,totalPage);
-        showNext = beginPage != 1; //맨 처음만 아니면 실행
-        showPrev = endPage != totalPage; //끝 페이지만 아니면 실행
+        showPrev = beginPage != 1; //맨 처음만 아니면 실행
+        showNext = endPage != totalPage; //끝 페이지만 아니면 실행
 
     }
 

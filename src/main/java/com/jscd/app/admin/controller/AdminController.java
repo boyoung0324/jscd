@@ -8,14 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -168,28 +166,30 @@ public class AdminController {
 
     //관리자 개인정보 수정하기
     @PostMapping("/modify")
-    public String adminModify(AdminDto adminDto, Model model, HttpSession session) {
+    public String adminModify(AdminDto adminDto, Model model) {
         try {
-            //현재 세션에 저장된 관리자 id를 가져옴
-            String adminId = (String) session.getAttribute("adminId");
             //비밀번호 암호화
             String pwd = adminDto.getPwd();
             String securePwd = passwordEncoder.encode(pwd);
-
-            adminDto.setId(adminId);
             adminDto.setPwd(securePwd);
-            adminService.modifyAdmin(adminDto);
+
+            int result = adminService.modifyAdmin(adminDto);
+
+            if(result != 1){
+                throw new Exception("Modify Error");
+            }
             //수정 성공 시, msg 모델에 넘겨줌
             model.addAttribute("msg", "MOD_OK");
         } catch (Exception e) {
             e.printStackTrace();
+            //기존에 작성하던 내용 넘기기
+            model.addAttribute("adminDto",adminDto);
             //수정 실패 시, msg 모델에 넘겨줌
             model.addAttribute("msg", "MOD_ERR");
-            return "redirect:/admin/modify";
+            return "redirect:/admin/read";
         }
         return "redirect:/admin/read";
     }
-
 
 
 }

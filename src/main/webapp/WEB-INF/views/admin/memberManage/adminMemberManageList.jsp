@@ -16,6 +16,7 @@
     <link rel="stylesheet" type="text/css" href="<c:url value="/css/reset.css"/>">
     <link rel="stylesheet" type="text/css" href="<c:url value="/css/admin/home.css"/>">
     <link rel="stylesheet" type="text/css" href="<c:url value="/css/adminInfo.css"/>">
+    <script src="https://code.jquery.com/jquery-1.11.3.js"></script>
     <!-- 탭 아이콘 & 글자 지정 -->
     <link rel="icon" href="/img/white_mainlogo.png"/>
     <link rel="apple-touch-icon" href="/img/white_mainlogo.png"/>
@@ -24,14 +25,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
           integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
           crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    <script>
-        window.onload=function (){
-            let msg = "${param.msg}";
-            if (msg == "LIST_ERR") alert("회원 목록을 가져오는데 실패했습니다. 다시 시도해 주세요.");
-            if (msg == "MOD_ERR") alert("수정에 실패했습니다. 다시 시도해 주세요.");
-            if (msg == "MOD_OK") alert("성공적으로 수정되었습니다.");
-        }
-    </script>
 </head>
 <body>
 <header>
@@ -75,7 +68,7 @@
                         <option value="3">탈퇴</option>
                         <option value="4">휴면</option>
                     </select>
-                    <input type="button" value="등급/상태 수정" class="modifyBtn" onclick="statusUpdate()">
+                    <input type="button" value="등급/상태 수정" class="modifyBtn">
                 </div>
             </div>
             <div id="memberListBox">
@@ -113,7 +106,7 @@
                                                 pattern="yyyy-MM-dd" type="date"/></td>
                             <td>
                                 <button class="detailBtn"
-                                        onclick="location.href='/adminManage/memberManage/read?page=${sc.page}&mebrNo=${memberDto.mebrNo}'">
+                                        onclick="location.href='/adminManage/memberManage/${memberDto.mebrNo}/info?page=${sc.page}'">
                                     상세보기
                                 </button>
                             </td>
@@ -146,6 +139,59 @@
 </div>
 </body>
 <script>
+
+    $(document).ready(function (){
+
+        $(".modifyBtn").on("click", function () {
+            //체크박스 체크된 항목
+            const query = 'input[name="chk"]:checked'
+            const selectedElements = document.querySelectorAll(query)
+
+            //체크박스 체크된 항목의 개수
+            const selectedElementsCnt = selectedElements.length;
+
+            if (selectedElementsCnt == 0) {
+                alert("수정할 항목을 선택해주세요.");
+                return false;
+            } else {
+                if (confirm("상태를 변경 하시겠습니까?")) {
+                    //배열생성
+                    const mebrNoArr = new Array(selectedElementsCnt);
+
+                    document.querySelectorAll('input[name="chk"]:checked').forEach(function (v, i) { //i는 인덱스, v는 input체크박스
+                        mebrNoArr[i] = v.value;
+                    });
+
+                    var grade = document.getElementById('grade').value;
+                    var status = document.getElementById('status').value;
+
+                    $.ajax({
+                        type : 'PATCH' ,
+                        url : '/adminManage/memberManage/list?page=${sc.page}',
+                        headers: {"content-type": "application/json"},
+                        traditional: true,
+                        data : JSON.stringify({grade:grade,status: status, mebrNoArr:mebrNoArr}),
+                        success : function (result){
+                            if(result.redirect){
+                                alert("수정이 완료되었습니다.");
+                                window.location.href = result.redirect;
+                            }else{
+                                alert("에러 발생")
+                                throw new Error("Modify Error")
+                            }
+                        },
+                        error : function(){
+                            alert("수정이 실패했습니다.");
+                        }
+                    })//ajax
+
+                }
+            }
+        }) //event
+
+
+    })//document
+
     function allChecked(target) {
 
         //전체 체크박스 버튼
@@ -200,49 +246,6 @@
         });
     }
 
-    // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-
-    //글삭제
-    function statusUpdate() {
-        //체크박스 체크된 항목
-        const query = 'input[name="chk"]:checked'
-        const selectedElements = document.querySelectorAll(query)
-
-        //체크박스 체크된 항목의 개수
-        const selectedElementsCnt = selectedElements.length;
-
-        if (selectedElementsCnt == 0) {
-            alert("수정할 항목을 선택해주세요.");
-            return false;
-        } else {
-            if (confirm("상태를 변경 하시겠습니까?")) {
-                //배열생성
-                const arr = new Array(selectedElementsCnt);
-
-                document.querySelectorAll('input[name="chk"]:checked').forEach(function (v, i) { //i는 인덱스, v는 input체크박스
-                    arr[i] = v.value;
-                    console.log(v.value);
-                });
-
-                const form = document.createElement('form');
-                form.setAttribute('method', 'post');        //Post 메소드 적용
-                form.setAttribute('action', '/adminManage/memberManage/modifyMain?page=' +${sc.page});
-
-                var input1 = document.createElement('input');
-                var input2 = document.getElementById('grade');
-                var input3 = document.getElementById('status');
-                input1.setAttribute("type", "hidden");
-                input1.setAttribute("name", "mebrNoArr");
-                input1.setAttribute("value", arr);
-                form.appendChild(input1);
-                form.appendChild(input2);
-                form.appendChild(input3);
-                console.log(form);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-    }
 </script>
 
 </html>

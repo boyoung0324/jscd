@@ -6,15 +6,14 @@ import com.jscd.app.admin.dto.InstructorInfoDto;
 import com.jscd.app.admin.dto.InstructorMemberInfoDto;
 import com.jscd.app.admin.service.InstructorInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 	/*
 	작성일:20231122
@@ -58,9 +57,9 @@ public class InstructorInfoController {
         return "/admin/instructorManage/instructorInfoList";
     }
 
-    //강사 상세 정보 읽기+수정
-    @GetMapping("/read")
-    public String infoRead(Integer mebrNo, Integer page, Model model) {
+    //강사 상세 정보 읽기
+    @GetMapping("/{mebrNo}/info")
+    public String infoRead(@PathVariable Integer mebrNo, Integer page, Model model) {
 
         try {
             //쿼리스트링으로 넘어온 iscrNo로 강사 데이터를 select
@@ -77,47 +76,50 @@ public class InstructorInfoController {
         return "/admin/instructorManage/instructorInfo";
     }
 
+    //상세페이지 수정
+    @PatchMapping("/{mebrNo}/info")
+    @ResponseBody
+    public Map<String,String> modifyInfo(@PathVariable Integer mebrNo, Integer page, @RequestBody InstructorInfoDto instructorInfoDto) {
+        Map<String, String> map = new HashMap<>();
 
-    @PostMapping("/modify") //상세 페이지 수정
-    public String infoModify(Integer page, InstructorInfoDto instructorInfoDto, Model model) {
-        try {
-            //입력받아 넘어온 dto update
-            infoService.modify(instructorInfoDto);
-            //에러 없다면, 성공msg 모델에 전달
-            model.addAttribute("msg", "MOD_OK");
+        try{
+            int result = infoService.modify(instructorInfoDto);
+            if(result != 1) throw new Exception("Modify Error");
 
-        } catch (Exception e) {
+            map.put("redirect","/adminManage/instructor/" + mebrNo + "/info?page="+page);
+            return map;
+        }catch (Exception e){
             e.printStackTrace();
-            //에러 발생 시, 에러 msg 전달 _ 읽기 화면으로 이동
-            model.addAttribute("msg", "MOD_ERR");
-            return "redirect:/adminManage/instructor/read?page=" + page + "&mebrNo=" + instructorInfoDto.getMebrNo();
+            map.put("error","Modify Error");
+            return map;
         }
-
-        return "redirect:/adminManage/instructor/read?page=" + page + "&mebrNo=" + instructorInfoDto.getMebrNo();
     }
 
+
     //메인화면 수정
-    @PostMapping("/modifyStatus")
-    public String statusModify(Integer[] mebrNoArr, Integer page, Integer status, Model model) {
-        try {
-            //jsp에서 전달받은 회원번호 배열 List에 담아주기
-            List mebrNo = new ArrayList(mebrNoArr.length);
+    @PatchMapping("/list")
+    @ResponseBody
+    public Map<String,String> statusModify(@RequestBody InstructorInfoDto infoDto, Integer page) {
+        Map<String, String> map = new HashMap<>();
+        Integer[]mebrNoArr = infoDto.getMebrNoArr();
+
+        try{
+            List mebrNo = new ArrayList<>(mebrNoArr.length);
             for (int i = 0; i < mebrNoArr.length; i++) {
                 mebrNo.add(mebrNoArr[i]);
             }
-            //수정 메서드에 전달
-            infoService.modifyStatus(status, mebrNo);
+            int result = infoService.modifyStatus(infoDto.getStatus(),mebrNo);
+            if(result != mebrNo.size()) throw new Exception("Status Modify Error");
 
-            model.addAttribute("msg", "MOD_OK");
-        } catch (Exception e) {
+            map.put("redirect","/adminManage/instructor/list?page="+page);
+            return map;
+        }catch (Exception e){
             e.printStackTrace();
-            //에러 발생 시, 현재 화면(list)에 에러 msg 전달
-            model.addAttribute("msg", "MOD_ERR");
-            return "redirect:/adminManage/instructor/list?page=" + page;
+            map.put("error","Status Modify Error");
+            return map;
         }
-
-        return "redirect:/adminManage/instructor/list?page=" + page;
     }
+
 
 
 }
