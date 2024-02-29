@@ -51,29 +51,29 @@ public class MemberManageServiceImpl implements MemberManageService { //회원 �
     @Override
     @Transactional(rollbackFor = Exception.class) //메인페이지 상태/등급 일괄 수정
     public int modify(Integer status, Integer grade, List<Integer> mebrNo) throws Exception {
-        int rowCnt = manageDao.update(status, grade, mebrNo);
+                    int rowCnt = manageDao.update(status, grade, mebrNo);
 
-        //등급이 강사로 변경됐다면,
-        if (grade == 3) {
-            //회원 정보를 강사테이블로 insert
-            InstructorInfoDto instructorInfoDto = new InstructorInfoDto();
+                    //등급이 강사로 변경됐다면,
+                    if (grade == 3) {
+                        //회원 정보를 강사테이블로 insert
+                        InstructorInfoDto instructorInfoDto = new InstructorInfoDto();
 
-            for (int i = 0; i < mebrNo.size(); i++) {
-                //회원 번호만 insert(소개말,급여는 추후에 강사가 기입 and 관리자가 지정)
-                instructorInfoDto.setMebrNo(mebrNo.get(i));
-                rowCnt = insturctorInfoDao.insert(instructorInfoDto);
-            }
-        } else if (grade == 4) { //등급이 관리자(조교)로 변경됐다면,
+                        for (int i = 0; i < mebrNo.size(); i++) {
+                            //회원 번호만 insert(소개말,급여는 추후에 강사가 기입 and 관리자가 지정)
+                            instructorInfoDto.setMebrNo(mebrNo.get(i));
+                            insturctorInfoDao.insert(instructorInfoDto);
+                        }
+                    } else if (grade == 4) { //등급이 관리자(조교)로 변경됐다면,
 
-            for (int i = 0; i < mebrNo.size(); i++) {
-                MemberDto memberDto = manageDao.selectMember(mebrNo.get(i));
-                //회원 정보가 관리자 테이블로 insert
-                AdminDto adminDto = new AdminDto();
+                        for (int i = 0; i < mebrNo.size(); i++) {
+                            MemberDto memberDto = manageDao.selectMember(mebrNo.get(i));
+                            //회원 정보가 관리자 테이블로 insert
+                            AdminDto adminDto = new AdminDto();
                 adminDto.setId(memberDto.getId());
                 adminDto.setName(memberDto.getName());
                 adminDto.setPwd(memberDto.getPwd());
                 adminDto.setGrade(4); //5 : 원장님 _ 4: 조교 =>원장님이 부여하는 관리자는 디폴트가 '조교'
-                rowCnt = adminDao.insertAdmin(adminDto);
+               adminDao.insertAdmin(adminDto);
             }
         } else if (grade == 2) { //등급이 학생으로 변경됐다면,
             StdManageDto stdManageDto = new StdManageDto();
@@ -81,7 +81,7 @@ public class MemberManageServiceImpl implements MemberManageService { //회원 �
                 stdManageDto.setMebrNo(mebrNo.get(i)); //회원 번호만 넣기
                 stdManageDto.setGisu(""); //기수 어떻게 들어갈지..일단 비우기
                 stdManageDto.setStatus(1); //1 '수강예정' 기본값
-                rowCnt = stdManageDao.insert(stdManageDto);
+                 stdManageDao.insert(stdManageDto);
             }
 
         }
